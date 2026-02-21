@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Focus - AI Smart Auto Focus & Subject Tracking</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="video-wrapper">
+        <canvas id="main-canvas"></canvas>
+        <canvas id="hidden-canvas" hidden></canvas>
+        
+        <div class="loading-overlay" id="loading-overlay">
+            <div class="spinner"></div>
+            <p id="loading-text">Loading AI models...</p>
+        </div>
+
+        <button class="menu-toggle" id="menu-toggle">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="4" y1="21" x2="4" y2="14"></line>
+                <line x1="4" y1="10" x2="4" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12" y2="3"></line>
+                <line x1="20" y1="21" x2="20" y2="16"></line>
+                <line x1="20" y1="12" x2="20" y2="3"></line>
+                <line x1="1" y1="14" x2="7" y2="14"></line>
+                <line x1="9" y1="8" x2="15" y2="8"></line>
+                <line x1="17" y1="16" x2="23" y2="16"></line>
+            </svg>
+        </button>
+
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-mini">
+                    <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+                        <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="16" cy="16" r="6" fill="currentColor"/>
+                    </svg>
+                    <span>Dynamic Focus</span>
+                </div>
+                <button class="close-sidebar" id="close-sidebar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="sidebar-content">
+                <div class="control-group">
+                    <h4>Source</h4>
+                    <div class="btn-row">
+                        <button id="btn-upload" class="btn-mini">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            Upload
+                        </button>
+                        <button id="btn-webcam" class="btn-mini">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 7l-7 5 7 5V7z"/>
+                                <rect x="1" y="5" width="15" height="14" rx="2"/>
+                            </svg>
+                            Camera
+                        </button>
+                        <input type="file" id="video-input" accept="video/*" hidden>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h4>Blur</h4>
+                    <div class="slider-mini">
+                        <input type="range" id="blur-intensity" min="0" max="50" value="20">
+                        <span id="blur-value">20</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h4>Detection</h4>
+                    <div class="slider-mini">
+                        <input type="range" id="detection-interval" min="1" max="15" value="5">
+                        <span id="detection-value">5</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h4>Threshold</h4>
+                    <div class="slider-mini">
+                        <input type="range" id="confidence-threshold" min="0" max="100" value="50">
+                        <span id="confidence-threshold-value">50%</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h4>Options</h4>
+                    <label class="toggle-mini">
+                        <input type="checkbox" id="enable-tracking" checked>
+                        <span class="toggle-track"></span>
+                        <span>Tracking</span>
+                    </label>
+                    <label class="toggle-mini">
+                        <input type="checkbox" id="enable-segmentation">
+                        <span class="toggle-track"></span>
+                        <span>Segmentation</span>
+                    </label>
+                </div>
+
+                <div class="control-group btn-group">
+                    <button id="btn-record" class="btn-mini record-btn">
+                        <span class="record-dot"></span>
+                        Record
+                    </button>
+                    <button id="btn-download" class="btn-mini" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-bar" id="stats-bar">
+            <div class="stat">
+                <span class="stat-label">FPS</span>
+                <span class="stat-value" id="fps-counter">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Status</span>
+                <span class="stat-value status-text" id="tracking-status">Ready</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Confidence</span>
+                <span class="stat-value" id="confidence-value">--</span>
+            </div>
+        </div>
+
+        <div class="click-hint" id="click-hint">
+            Click on a subject to track
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+    <script src="utils.js"></script>
+    <script src="detection.js"></script>
+    <script src="tracking.js"></script>
+    <script src="segmentation.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
